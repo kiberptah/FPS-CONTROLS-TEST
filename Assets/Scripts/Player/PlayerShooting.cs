@@ -2,6 +2,8 @@
 using System.Collections.Generic;
 using UnityEngine;
 
+using System;
+
 public class PlayerShooting : MonoBehaviour
 {
     private Camera fpsCam;
@@ -9,11 +11,16 @@ public class PlayerShooting : MonoBehaviour
     private float range = 100f;
     [SerializeField]
     private float damage = 10f;
-    // Start is called before the first frame update
+
+
+    public static event Action<Transform, Vector3, float, Vector3> playerHitEnemy;
+
     private void Awake()
     {
         fpsCam = Camera.main;
     }
+
+    
     void Start()
     {
         
@@ -36,9 +43,14 @@ public class PlayerShooting : MonoBehaviour
                 {
                     if (hit.transform.GetComponent<TagSystem>().CheckTag(TagSystem.Tags.damagable))
                     {
-                        hit.transform.GetComponent<Health>().TakeDamage(damage);
+                        // // hit.transform.GetComponent<Health>().TakeDamage(damage);
+
+                        playerHitEnemy?.Invoke(hit.transform, hit.point, damage, transform.position);
+
+                        //hit.transform.GetComponent<CharacterEvents>().ReceiveDamage(damage);
+
                     }
-                    
+
                 }
             }
         }

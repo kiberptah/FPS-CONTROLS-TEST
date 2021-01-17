@@ -36,6 +36,6 @@ public class PatrolState : INPCState
     private void JustRotate(EnemyStateMachine npc)
     {
         
-        npc.gameObject.transform.Rotate(Vector3.up, 100f * Time.deltaTime);
+        //npc.gameObject.transform.Rotate(Vector3.up, 100f * Time.deltaTime);
     }
 }

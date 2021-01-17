@@ -9,7 +9,7 @@ Shader "SyntyStudios/Prototype_Object"
 		_GridScale("GridScale", Float) = 5
 		_Falloff("Falloff", Float) = 50
 		_OverlayAmount("OverlayAmount", Range( 0 , 1)) = 1
-		[HideInInspector] __dirty( "", Int ) = 1
+		[HideInInspector] __directionty( "", Int ) = 1
 	}
 
 	SubShader
@@ -111,7 +111,7 @@ Shader "SyntyStudios/Prototype_Object"
 				UNITY_TRANSFER_INSTANCE_ID( v, o );
 				float3 worldPos = mul( unity_ObjectToWorld, v.vertex ).xyz;
 				half3 worldNormal = UnityObjectToWorldNormal( v.normal );
-				half3 worldTangent = UnityObjectToWorldDir( v.tangent.xyz );
+				half3 worldTangent = UnityObjectToWorlddirection( v.tangent.xyz );
 				half tangentSign = v.tangent.w * unity_WorldTransformParams.w;
 				half3 worldBinormal = cross( worldNormal, worldTangent ) * tangentSign;
 				o.tSpace0 = float4( worldTangent.x, worldBinormal.x, worldNormal.x, worldPos.x );
@@ -130,7 +130,7 @@ Shader "SyntyStudios/Prototype_Object"
 				Input surfIN;
 				UNITY_INITIALIZE_OUTPUT( Input, surfIN );
 				float3 worldPos = float3( IN.tSpace0.w, IN.tSpace1.w, IN.tSpace2.w );
-				half3 worldViewDir = normalize( UnityWorldSpaceViewDir( worldPos ) );
+				half3 worldViewdirection = normalize( UnityWorldSpaceViewdirection( worldPos ) );
 				surfIN.worldPos = worldPos;
 				surfIN.worldNormal = float3( IN.tSpace0.z, IN.tSpace1.z, IN.tSpace2.z );
 				surfIN.internalSurfaceTtoW0 = IN.tSpace0.xyz;

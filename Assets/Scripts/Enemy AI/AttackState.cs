@@ -2,11 +2,20 @@
 using System.Collections.Generic;
 using UnityEngine;
 
+using System;
+
 public class AttackState : INPCState
 {
     INPCState nextState;
     IEnumerator dodging;
     bool isStateEntered = false;
+
+
+
+    public static event Action<Transform, Transform, float> enemyAttack;
+    public static event Action<Transform, Transform, float> enemyPrepAttack;
+
+
     public INPCState DoState(EnemyStateMachine npc)
     {
         OnStateEnter(npc);
@@ -31,6 +40,9 @@ public class AttackState : INPCState
     {
         if (isStateEntered == false)
         {
+            npc.attackCharge = 0;
+            npc.attackisReady = false;
+
             dodging = WeirdDodging(npc);
             CoRunner.instance.StartCoroutine(dodging);
 
@@ -43,20 +55,41 @@ public class AttackState : INPCState
     {
         npc.transform.LookAt(npc.attackTarget);
 
-        if (npc.attackCurrentCooldown >= npc.attackCooldown)
+        if (npc.attackisReady == false)
         {
-            npc.attackTarget.GetComponent<Health>()?.TakeDamage(npc.attackDamage);
+            if (npc.attackCurrentCooldown >= npc.attackCooldown)
+            {
+                //npc.attackTarget.GetComponent<Health>()?.TakeDamage(npc.attackDamage);
 
 
-            GameObject attackLine = Object.Instantiate(npc.attackVisualizer, npc.transform);
-            attackLine.GetComponent<DrawLineToTarget>().target = npc.attackTarget;
-            Object.Destroy(attackLine, 0.2f);
+                /*GameObject attackLine = Object.Instantiate(npc.attackVisualizer, npc.transform);
+                attackLine.GetComponent<DrawLineToTarget>().target = npc.attackTarget;
+                Object.Destroy(attackLine, 0.2f);*/
+                enemyPrepAttack?.Invoke(npc.transform, npc.attackTarget, npc.attackChargeNeed);
 
-            npc.attackCurrentCooldown = 0;
+                npc.attackisReady = true;
+            }
+            else
+            {
+                npc.attackCurrentCooldown += Time.deltaTime;
+            }
         }
-        else
+
+        if (npc.attackisReady == true)
         {
-            npc.attackCurrentCooldown += Time.deltaTime;
+            if (npc.attackCharge >= npc.attackChargeNeed)
+            {
+                enemyAttack?.Invoke(npc.transform, npc.attackTarget, npc.attackDamage);
+
+
+                npc.attackisReady = false;
+                npc.attackCharge = 0;
+                npc.attackCurrentCooldown = 0;
+            }
+            else
+            {
+                npc.attackCharge += Time.deltaTime;
+            }
         }
     }
 
@@ -87,16 +120,21 @@ public class AttackState : INPCState
         // this shit sucks 
         // ok it's better now
         while (npc.currentStateName == "AttackState" && npc != null)
-        {
+        {   
             Vector3 _direction = Vector3.zero;
-            _direction.x = 1 - 2 * Random.value;
+            _direction.x = 1 - 2 * UnityEngine.Random.value;
             //_direction.y = Random.Range(-0.25f, 0.25f);
             _direction = _direction.normalized;
-
+            _direction = npc.transform.TransformDirection(_direction);
+            
             RaycastHit _hit;
-            if (Physics.Raycast(npc.transform.position, npc.transform.position + _direction, out _hit, 2f) == false)
+            
+            if (Physics.Raycast(npc.transform.position, _direction, out _hit, 2f) == false)
             {
                 npc.rb.AddRelativeForce(_direction * 1, ForceMode.VelocityChange);
+                //Debug.DrawRay(npc.transform.position, _direction, Color.green, 0.5f);
+                //Debug.Log(npc.transform.position + " — " + _direction);
+
             }
             else
             {

@@ -13,6 +13,11 @@ public class EnemyStateMachine : MonoBehaviour
     public float attackCooldown;
     public float attackCurrentCooldown;
 
+    public float attackCharge;
+    public float attackChargeNeed = 2f;
+
+    public bool attackisReady = false;
+
     public float attackDistance = 20f;
 
     public GameObject attackVisualizer;
@@ -54,7 +59,7 @@ public class EnemyStateMachine : MonoBehaviour
     }
     private void Start()
     {
-        attackTarget = Player.singleton.transform;
+        attackTarget = Player.singleton?.transform;
 
     }
 
@@ -81,7 +86,7 @@ public class EnemyStateMachine : MonoBehaviour
         RaycastHit _hit;
 
         //if (Physics.SphereCast(transform.position, spherecastThickness, _direction, out _hit, sightDistance, LayerMask.GetMask("Player", "Walls")))
-        if (Physics.Raycast(transform.position, _direction, out _hit, sightDistance, LayerMask.GetMask("Player", "Walls", "Enemy")))
+        if (Physics.Raycast(transform.position, _direction, out _hit, sightDistance, LayerMask.GetMask("Player", "Walls", "Enemy", "LevelGeometry")))
         {
             if (_hit.transform.tag == "Player" && Vector3.Angle(_direction, transform.forward) <= sightFOV)
             {
@@ -104,17 +109,21 @@ public class EnemyStateMachine : MonoBehaviour
     {
         RaycastHit _hit;
 
+        // Going up
         if (Physics.Raycast(transform.position, Vector3.down, out _hit, hoveringHeight))
         {
-            //rb.AddForce(Vector3.up * 5f, ForceMode.VelocityChange);
-            //transform.Translate(Vector3.up * Time.deltaTime * moveSpeed, Space.World);
-            transform.position = new Vector3(transform.position.x, 
-                Mathf.SmoothStep(transform.position.y, hoveringHeight, 1), 
-                transform.position.z);
+            // If ceiling allows
+            if (Physics.Raycast(transform.position, Vector3.up, hoveringHeight * 0.5f) == false)
+            {
+                transform.position = new Vector3(transform.position.x,
+                    Mathf.SmoothStep(transform.position.y, transform.position.y + hoveringHeight, 0.1f),
+                    transform.position.z);
+            }
         }
+        // Going down if reasonable
         else if ((Physics.Raycast(transform.position, Vector3.down, out _hit, hoveringHeight * 1.1f)) == false)
         {
-            //transform.Translate(Vector3.down * Time.deltaTime * moveSpeed * 0.25f, Space.World);
+            transform.Translate(Vector3.down * Time.deltaTime * moveSpeed * 0.25f, Space.World);
 
         }
     }
