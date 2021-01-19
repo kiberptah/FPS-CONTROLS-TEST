@@ -13,7 +13,7 @@ public class PlayerShooting : MonoBehaviour
     private float damage = 10f;
 
 
-    public static event Action<Transform, Vector3, float, Vector3> playerHitEnemy;
+    //public static event Action<Transform, Vector3, float, Vector3> playerHitEnemy;
 
     private void Awake()
     {
@@ -39,17 +39,9 @@ public class PlayerShooting : MonoBehaviour
             RaycastHit hit;
             if (Physics.Raycast(fpsCam.transform.position, fpsCam.transform.forward, out hit, range))
             {
-                if (hit.transform.GetComponent<TagSystem>() != null)
+                if (hit.transform.GetComponent<Health>() != null)
                 {
-                    if (hit.transform.GetComponent<TagSystem>().CheckTag(TagSystem.Tags.damagable))
-                    {
-                        // // hit.transform.GetComponent<Health>().TakeDamage(damage);
-
-                        playerHitEnemy?.Invoke(hit.transform, hit.point, damage, transform.position);
-
-                        //hit.transform.GetComponent<CharacterEvents>().ReceiveDamage(damage);
-
-                    }
+                    EventDirector.someAttack(transform, hit.transform, hit.point, damage);
 
                 }
             }

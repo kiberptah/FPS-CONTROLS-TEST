@@ -52,12 +52,12 @@ public class LaserTrap : MonoBehaviour
 
     void DealDamage(Transform _target)
     {
-        if (_target.GetComponent<TagSystem>() != null)
+        EventDirector.someAttack(transform, _target, contactPoint.transform.position, damagePerSecond * Time.deltaTime);
+
+        /*if (_target.GetComponent<Health>() != null)
         {
-            if (_target.GetComponent<TagSystem>().CheckTag(TagSystem.Tags.damagable))
-            {
-                _target.GetComponent<Health>()?.TakeDamage(damagePerSecond * Time.deltaTime);
-            }
-        }
+            EventDirector.someAttack(transform, _target, contactPoint.transform.position, damagePerSecond * Time.deltaTime);
+
+        }*/
     }
 }

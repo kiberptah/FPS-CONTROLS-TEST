@@ -12,8 +12,8 @@ public class AttackState : INPCState
 
 
 
-    public static event Action<Transform, Transform, float> enemyAttack;
-    public static event Action<Transform, Transform, float> enemyPrepAttack;
+    //public static event Action<Transform, Transform, float> enemyAttack;
+    //public static event Action<Transform, Transform, float> enemyPrepAttack;
 
 
     public INPCState DoState(EnemyStateMachine npc)
@@ -65,7 +65,9 @@ public class AttackState : INPCState
                 /*GameObject attackLine = Object.Instantiate(npc.attackVisualizer, npc.transform);
                 attackLine.GetComponent<DrawLineToTarget>().target = npc.attackTarget;
                 Object.Destroy(attackLine, 0.2f);*/
-                enemyPrepAttack?.Invoke(npc.transform, npc.attackTarget, npc.attackChargeNeed);
+
+                //enemyPrepAttack?.Invoke(npc.transform, npc.attackTarget, npc.attackChargeNeed);
+                EventDirector.somePrepAttack?.Invoke(npc.transform, npc.attackTarget, npc.attackTarget.position, npc.attackDamage);
 
                 npc.attackisReady = true;
             }
@@ -79,8 +81,8 @@ public class AttackState : INPCState
         {
             if (npc.attackCharge >= npc.attackChargeNeed)
             {
-                enemyAttack?.Invoke(npc.transform, npc.attackTarget, npc.attackDamage);
-
+                //enemyAttack?.Invoke(npc.transform, npc.attackTarget, npc.attackDamage);
+                EventDirector.someAttack?.Invoke(npc.transform, npc.attackTarget, npc.attackTarget.position, npc.attackDamage);
 
                 npc.attackisReady = false;
                 npc.attackCharge = 0;

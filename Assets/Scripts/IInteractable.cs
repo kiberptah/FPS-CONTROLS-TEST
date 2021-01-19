@@ -4,8 +4,8 @@ public interface IInteractable
 {
     //float maxRange { get; }
 
-    void OnHoverStart();
+    void OnHoverStart(Transform _interactor);
     void OnInteract(Transform interactor);
-    void OnHoverEnd();
+    void OnHoverEnd(Transform _interactor);
 
 }

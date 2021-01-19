@@ -7,18 +7,20 @@ using System;
 
 public class Health : MonoBehaviour
 {
-    
-    private float health;
     [SerializeField] private float maxHealth = 100f;
+    private float health;
 
 
     void OnEnable()
     {
         EventDirector.someHeal += Heal;
+        EventDirector.someAttack += TakeDamage;
+        
     }
     private void OnDisable()
     {
         EventDirector.someHeal -= Heal;
+        EventDirector.someAttack -= TakeDamage;
 
     }
 
@@ -30,29 +32,33 @@ public class Health : MonoBehaviour
     {
         EventDirector.updateHealth(transform, health);
     }
-    void Update()
+
+
+    void Heal(Transform _whom, float _amount)
     {
-        if (health <= 0)
+        if (_whom == transform)
         {
-            EventDirector.someDeath?.Invoke(gameObject.transform);
-            Destroy(gameObject);
+            ChangeHealth(_amount);
+        }
+    }
+    void TakeDamage(Transform _who, Transform _whom, Vector3 _point, float _amount)
+    {
+        if (_whom == transform)
+        {
+            ChangeHealth(-_amount);
+
+            if (health <= 0)
+            {
+                EventDirector.someDeath?.Invoke(gameObject.transform);
+                Destroy(gameObject);
+            }
         }
     }
 
-
-
-    public void TakeDamage(float _damage)
-    {
-        health = Mathf.Clamp(health - _damage, 0, maxHealth);
-        EventDirector.updateHealth(transform, health);
-    } 
-
-    void Heal(float _amount)
+    void ChangeHealth(float _amount)
     {
         health = Mathf.Clamp(health + _amount, 0, maxHealth);
         EventDirector.updateHealth(transform, health);
     }
-
-
 
 }

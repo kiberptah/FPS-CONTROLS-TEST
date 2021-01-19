@@ -45,15 +45,15 @@ public class PlayerInteraction : MonoBehaviour
                     {
                         if (currentTarget != null)
                         {
-                            currentTarget.OnHoverEnd();
+                            currentTarget.OnHoverEnd(transform);
                             currentTarget = interactable;
-                            currentTarget.OnHoverStart();
+                            currentTarget.OnHoverStart(transform);
                             return;
                         }
                         else
                         {
                             currentTarget = interactable;
-                            currentTarget.OnHoverStart();
+                            currentTarget.OnHoverStart(transform);
                             return;
                         }
                     }
@@ -62,7 +62,7 @@ public class PlayerInteraction : MonoBehaviour
                 {
                     if (currentTarget != null)
                     {
-                        currentTarget.OnHoverEnd();
+                        currentTarget.OnHoverEnd(transform);
                         currentTarget = null;
                         return;
                     }
@@ -72,7 +72,7 @@ public class PlayerInteraction : MonoBehaviour
             {
                 if (currentTarget != null)
                 {
-                    currentTarget.OnHoverEnd();
+                    currentTarget.OnHoverEnd(transform);
                     currentTarget = null;
                     return;
                 }
@@ -82,7 +82,7 @@ public class PlayerInteraction : MonoBehaviour
         {
             if (currentTarget != null)
             {
-                currentTarget.OnHoverEnd();
+                currentTarget.OnHoverEnd(transform);
                 currentTarget = null;
                 return;
             }

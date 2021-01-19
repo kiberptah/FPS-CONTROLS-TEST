@@ -10,21 +10,22 @@ public class HealStation : MonoBehaviour, IInteractable
 
     //private const float maxRange = 100f;
 
-    public void OnHoverStart()
+    public void OnHoverStart(Transform _interactor)
     {
         //Debug.Log("READY TO INTERACT");
+        EventDirector.showInteractUI("Heal");
     }
 
 
-    public void OnHoverEnd()
+    public void OnHoverEnd(Transform _interactor)
     {
-        //Debug.Log("CANT INTERACT");
+        EventDirector.hideInteractUI();
     }
 
         
     public void OnInteract(Transform _interactor)
     {
         //Debug.Log("DO INTERACT");
-        EventDirector.someHeal(healAmount);
+        EventDirector.someHeal(_interactor, healAmount);
     }
 }
