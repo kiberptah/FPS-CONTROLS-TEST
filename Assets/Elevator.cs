@@ -60,10 +60,10 @@ public class Elevator : MonoBehaviour
 
         while (Vector3.Distance(elevatorCabin.transform.localPosition, floorsCoord[_floor]) > 0.1f)
         {
-            Vector3 offset = elevatorCabin.transform.localPosition + (floorsCoord[_floor] - elevatorCabin.transform.localPosition).normalized;
+            Vector3 offset = elevatorCabin.transform.localPosition + (floorsCoord[_floor] - elevatorCabin.transform.localPosition).normalized * elevatorSpeed;
             //elevatorCabin.transform.Translate((floorsCoord[_floor] - elevatorCabin.transform.localPosition).normalized * Time.deltaTime * elevatorSpeed);
             elevatorCabin.transform.localPosition = Vector3.Lerp(elevatorCabin.transform.localPosition, 
-                offset * elevatorSpeed, 0.1f);
+                offset, 0.1f);
 
             yield return new WaitForFixedUpdate();
 

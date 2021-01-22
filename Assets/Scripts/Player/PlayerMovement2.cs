@@ -17,7 +17,6 @@ public class PlayerMovement2 : MonoBehaviour
 
     public float slowWalkMultiplier = 0.5f;
     public float crouchWalkMultiplier = 0.3f;
-    public float airWalkSpeedMultiplier = 0.2f;
 
     public float jumpStrengh = 10f;
     private Vector3 horizontalJumpStrengh = Vector3.zero;
@@ -31,13 +30,14 @@ public class PlayerMovement2 : MonoBehaviour
     //
     [Header("Debug")]
     [SerializeField]
-    private bool isObstacleAbove = false;
-    [SerializeField]
     private bool isGrounded = true;
     [SerializeField]
-    private bool isCrouching = false;
+    private bool isObstacleAbove = false;
     [SerializeField]
+    private bool isCrouching = false;
+
     private bool isSlowWalking = false;
+    private bool isMoving = false;
 
     Rigidbody rb;
     Bounds myBounds;
@@ -72,7 +72,6 @@ public class PlayerMovement2 : MonoBehaviour
     void Update()
     {
         Jumping();
-        //Crouching();
         CrouchingReworked();
         WalkingSlowly();
 
@@ -96,7 +95,6 @@ public class PlayerMovement2 : MonoBehaviour
         Vector3 _positionOffset = transform.TransformDirection(new Vector3(_xVel, 0, _zVel));
         float _slowWalkMultiplier = 1f;
         float _crouchWalkMultiplier = 1f;
-        float _airWalkSpeedMultiplier = 1f;
 
         //Slow Walking Speed
         if (isSlowWalking)
@@ -108,26 +106,32 @@ public class PlayerMovement2 : MonoBehaviour
         {
             _crouchWalkMultiplier = crouchWalkMultiplier;
         }
-        // in-th-air speed
-        if (isGrounded == false)
-        {
-            _airWalkSpeedMultiplier = airWalkSpeedMultiplier;
-        }
-
 
         //Moving
-        _positionOffset = _positionOffset.normalized * speed * _crouchWalkMultiplier * _slowWalkMultiplier * _airWalkSpeedMultiplier;
+        _positionOffset = _positionOffset.normalized * speed * _crouchWalkMultiplier * _slowWalkMultiplier;
         horizontalJumpStrengh = _positionOffset * rb.mass;
-        if (Input.GetAxis("Horizontal") != 0 || Input.GetAxis("Vertical") != 0)
+        if ((Input.GetAxis("Horizontal") != 0 || Input.GetAxis("Vertical") != 0) && isGrounded)
         {
-            rb.MovePosition(transform.position + _positionOffset  * Time.fixedDeltaTime);
+            isMoving = true;
+            //rb.MovePosition(transform.position + _positionOffset  * Time.fixedDeltaTime); // no inertia
+            rb.velocity = new Vector3(_positionOffset.x, rb.velocity.y, _positionOffset.z);
             eventPlayerMoving?.Invoke(true, new Vector3(_xVel, 0, _zVel));
 
         }
         else
         {
             eventPlayerMoving?.Invoke(false, Vector3.zero);
+            if (isMoving)
+            {
+                isMoving = false;
+                if (isGrounded)
+                {
+                    rb.velocity = new Vector3(0, rb.velocity.y, 0);
+                }
+            }
         }
+
+        
     }
 
     void Jumping()
@@ -199,83 +203,6 @@ public class PlayerMovement2 : MonoBehaviour
             }
         }
     }
-
-    void Crouching()
-    {
-        if (crouchingEnabled)
-        {
-            bool _isStanding = true;
-            //if (Input.GetButtonDown("Crouch") || Input.GetButtonUp("Crouch")) enable if crouching only while holding button
-            if (Input.GetButtonDown("Crouch"))
-            {
-                /*enable if crouching only while holding button
-                if (Input.GetButtonDown("Crouch"))
-                    _isStanding = true;
-                else
-                    _isStanding = false;
-                */
-                _isStanding = !isCrouching;
-                if (Crch != null)
-                {
-                    StopCoroutine(Crch);
-                }
-
-                Crch = CrouchSquishing(_isStanding);
-                StartCoroutine(Crch);
-
-                //isCrouching = !isCrouching;
-            }
-        }
-    }
-    IEnumerator CrouchSquishing(bool _isStanding)
-    {     
-        ChangeHeight:
-        if (_isStanding == true)
-        {
-            isCrouching = true;
-            // СЯДЬ
-            while (transform.localScale.y > heightScaleCrouching)
-            {
-                transform.localScale = new Vector3(transform.localScale.x, transform.localScale.y - 0.075f, transform.localScale.z);
-
-
-                yield return new WaitForSeconds(0.01f);
-            }
-        }
-        else
-        {           
-            if (!isObstacleAbove)
-            {
-                isCrouching = false;
-                //ВЫПРЯМИСЬ
-                while (transform.localScale.y < heightScaleStanding)
-                {              
-                    if (isObstacleAbove)
-                    {
-                        // СЯДЬ НАЗАД ПОТОЛОК МЕШАЕТ
-                        while (transform.localScale.y > heightScaleCrouching)
-                        {
-                            Debug.Log("Trying to sit back");
-                            transform.localScale = new Vector3(transform.localScale.x, transform.localScale.y - 0.025f, transform.localScale.z);
-                            yield return new WaitForSeconds(0.01f);
-                        }
-                        isCrouching = true;
-                        //goto ChangeHeight;
-                        break;
-                    }
-                    transform.localScale = new Vector3(transform.localScale.x, transform.localScale.y + 0.025f, transform.localScale.z);
-                    yield return new WaitForSeconds(0.01f);
-                }
-            }
-            else
-            {
-                isCrouching = true;
-            }
-        }
-        yield return null;
-    }
-
-
     void CheckHeadCollisions()
     {
         Bounds _currentBounds = gameObject.GetComponent<Collider>().bounds; ;
@@ -299,7 +226,6 @@ public class PlayerMovement2 : MonoBehaviour
             isObstacleAbove = false;
         }
     }
-
     void CheckGroundBelow()
     {
         //Checking ground
@@ -319,7 +245,6 @@ public class PlayerMovement2 : MonoBehaviour
             isGrounded = false;
         }
     }
-
     void WalkingSlowly()
     {
         if (Input.GetButton("SlowWalk"))
@@ -331,4 +256,5 @@ public class PlayerMovement2 : MonoBehaviour
             isSlowWalking = false;
         }
     }
+
 }
