@@ -7,6 +7,7 @@ using System;
 public class PlayerMovement2 : MonoBehaviour
 {
     public static event Action<bool, Vector3> eventPlayerMoving;
+    public static event Action<Vector3> globalSpeedEvent;
 
     [Header("Features")]
     public bool slowWalkingEnabled = true;
@@ -26,11 +27,15 @@ public class PlayerMovement2 : MonoBehaviour
     [SerializeField]
     private float heightScaleStanding;
 
+    [SerializeField] private float extraGravityCloseToTheGround = 100f;
+
     //
     //
     [Header("Debug")]
     [SerializeField]
-    private bool isGrounded = true;
+    public bool isGrounded = true;
+    [SerializeField] CheckFeetGround feetGroundCheck;
+    private bool hasLanded = true;
     [SerializeField]
     private bool isObstacleAbove = false;
     [SerializeField]
@@ -40,6 +45,7 @@ public class PlayerMovement2 : MonoBehaviour
     private bool isMoving = false;
 
     Rigidbody rb;
+    float rb_defaultDrag;
     Bounds myBounds;
     [SerializeField]
 
@@ -49,9 +55,15 @@ public class PlayerMovement2 : MonoBehaviour
 
     private bool wasUnderObstacleWhileCrouching = false; // для автовставания когда вылезаешь из под откуда-то
 
+    // Calculate global velocity
+    Vector3 lastPosition;
+    public Vector3 globalSpeed = Vector3.zero;
+
     void Awake()
     {
         rb = GetComponent<Rigidbody>();
+        rb_defaultDrag = rb.drag;
+        lastPosition = transform.position;
 
         if (isCrouching)
         {
@@ -66,8 +78,12 @@ public class PlayerMovement2 : MonoBehaviour
     void FixedUpdate()
     {
         Movement();
+        DragWhenStopped();
         CheckHeadCollisions();
         CheckGroundBelow();
+        JumpPhysicsAdjust();
+        //MoreGravityCloserToTheGround();
+        CalculateGlobalSpeed();
     }
     void Update()
     {
@@ -77,16 +93,7 @@ public class PlayerMovement2 : MonoBehaviour
 
     }
 
-    private void OnDrawGizmos()
-    {
-        Bounds _currentBounds = gameObject.GetComponent<Collider>().bounds;
-        float _currentHeight = _currentBounds.size.y;
 
-        Vector3 _spherePosition = transform.position;
-        _spherePosition.y = transform.position.y + _currentHeight * 0.5f;
-        Gizmos.color = Color.red;
-        Gizmos.DrawSphere(_spherePosition, 0.25f);
-    }
 
     void Movement()
     {
@@ -116,7 +123,6 @@ public class PlayerMovement2 : MonoBehaviour
             //rb.MovePosition(transform.position + _positionOffset  * Time.fixedDeltaTime); // no inertia
             rb.velocity = new Vector3(_positionOffset.x, rb.velocity.y, _positionOffset.z);
             eventPlayerMoving?.Invoke(true, new Vector3(_xVel, 0, _zVel));
-
         }
         else
         {
@@ -126,12 +132,24 @@ public class PlayerMovement2 : MonoBehaviour
                 isMoving = false;
                 if (isGrounded)
                 {
-                    rb.velocity = new Vector3(0, rb.velocity.y, 0);
+                    //rb.velocity = new Vector3(0, rb.velocity.y, 0);
                 }
             }
         }
 
         
+    }
+
+    void DragWhenStopped()
+    {
+        if (isMoving)
+        {
+            rb.drag = rb_defaultDrag;
+        }
+        else
+        {
+            rb.drag = rb_defaultDrag * 2;
+        }
     }
 
     void Jumping()
@@ -143,12 +161,37 @@ public class PlayerMovement2 : MonoBehaviour
         {                 
             if (Input.GetButtonDown("Jump") && isGrounded && !isCrouching)
             {
-                // Add Force Upwards
-                rb.AddForce(Vector3.up * jumpStrengh * rb.mass, ForceMode.Impulse);
-                // Add Force in walking direction
-                //rb.AddForce(horizontalJumpStrengh, ForceMode.Impulse);
-                
+                /*if (rb.velocity.y > 0)
+                {
+                    
+
+                    rb.AddForce(Vector3.up * jumpStrengh + new Vector3(0, rb.velocity.y, 0), ForceMode.VelocityChange);
+                    Debug.Log("jump adjust");
+                }
+                else
+                {
+                    rb.AddForce(Vector3.up * jumpStrengh, ForceMode.VelocityChange);
+                }*/
+
+                rb.AddForce(Vector3.up * jumpStrengh, ForceMode.VelocityChange);
+
             }
+        }
+    }
+    void JumpPhysicsAdjust()
+    {
+        if (isGrounded == false)
+        {
+            rb.drag = rb_defaultDrag * 0.1f;
+            hasLanded = false;
+        }
+
+        if (hasLanded == false && isGrounded == true)
+        {
+            //Debug.Log("EAGLE HAS LANDED " + Time.time);
+            //rb.velocity = new Vector3(0, rb.velocity.y, 0);
+            rb.drag = rb_defaultDrag;
+            hasLanded = true;
         }
     }
 
@@ -163,6 +206,7 @@ public class PlayerMovement2 : MonoBehaviour
             if (Input.GetButtonDown("CrouchSwitch"))
             {
                 isCrouching = !isCrouching;
+
             }
             if (Input.GetButtonDown("CrouchHold"))
             {
@@ -173,13 +217,19 @@ public class PlayerMovement2 : MonoBehaviour
                 isCrouching = false;
             }
 
+            if (isObstacleAbove && transform.localScale.y < heightScaleStanding)
+            {
+                isCrouching = true;
+            }
 
-            if (isCrouching || (isCrouching == false && isObstacleAbove == true && transform.localScale.y < _heightScaleCrouching)) // delete last check for autocrouch
+            // Приседаем
+            if (isCrouching || (isCrouching == false && isObstacleAbove == true && transform.localScale.y < heightScaleStanding)) // delete last check for autocrouch
             {
                 if (transform.localScale.y > _heightScaleCrouching)
                 {
                     float _newY = transform.localScale.y - _shrinkingSpeed;
                     _newY = Mathf.Clamp(_newY, _heightScaleCrouching, heightScaleStanding);
+
                     transform.localScale = new Vector3(transform.localScale.x, _newY, transform.localScale.z);
 
                     transform.position = new Vector3(transform.position.x, 
@@ -188,7 +238,8 @@ public class PlayerMovement2 : MonoBehaviour
                     //Debug.Log(standingHeight * 0.5f - standingHeight * 0.5f * transform.localScale.y);
                 }
             }
-            else
+            // Встаем
+            if (isCrouching == false && isObstacleAbove == false)
             {
                 if (transform.localScale.y < heightScaleStanding)
                 {
@@ -205,7 +256,7 @@ public class PlayerMovement2 : MonoBehaviour
     }
     void CheckHeadCollisions()
     {
-        Bounds _currentBounds = gameObject.GetComponent<Collider>().bounds; ;
+        Bounds _currentBounds = gameObject.GetComponent<Collider>().bounds;
         float _currentHeight = _currentBounds.size.y;
 
         Vector3 _rayOrigin = new Vector3(transform.position.x, transform.position.y - _currentHeight * 0.5f, transform.position.z);
@@ -214,10 +265,11 @@ public class PlayerMovement2 : MonoBehaviour
 
         float _sphereRadius = 0.25f;
         Vector3 _spherePosition = transform.position;
-        _spherePosition.y = transform.position.y + _currentHeight * 0.5f;
+        _spherePosition.y = transform.position.y + _currentHeight * 0.5f - _sphereRadius;
 
         if (Physics.Raycast(_rayOrigin, Vector3.up, out _hit, _rayLengh, ~LayerMask.GetMask("Player"))
-         || Physics.CheckSphere(_spherePosition, _sphereRadius, ~LayerMask.GetMask("Player")))
+         || Physics.CheckSphere(_spherePosition, _sphereRadius, ~LayerMask.GetMask("Player"))
+         )
         {
             isObstacleAbove = true;
         }
@@ -234,7 +286,7 @@ public class PlayerMovement2 : MonoBehaviour
 
         float _sphereRadius = 0.25f;
         Vector3 _spherePosition = transform.position;
-        _spherePosition.y = transform.position.y - _currentHeight * 0.5f + _sphereRadius * 0.5f;
+        _spherePosition.y = transform.position.y - _currentHeight * 0.5f + _sphereRadius * 0.95f;
 
         if (Physics.CheckSphere(_spherePosition, _sphereRadius, ~LayerMask.GetMask("Player")))
         {
@@ -244,6 +296,9 @@ public class PlayerMovement2 : MonoBehaviour
         {
             isGrounded = false;
         }
+
+        // Checking Ground via Feet
+        isGrounded = feetGroundCheck.isColliding;
     }
     void WalkingSlowly()
     {
@@ -256,5 +311,71 @@ public class PlayerMovement2 : MonoBehaviour
             isSlowWalking = false;
         }
     }
+
+    void MoreGravityCloserToTheGround()
+    {
+        Bounds _currentBounds = gameObject.GetComponent<Collider>().bounds;
+        float _currentHeight = _currentBounds.size.y / 2;
+
+        Vector3 _rayOrigin = transform.position;
+        float _rayLengh = _currentHeight * 1.1f;
+        RaycastHit _hit;
+
+        if (Physics.Raycast(_rayOrigin, Vector3.down, out _hit, _rayLengh, ~LayerMask.GetMask("Player")) && isGrounded == false && rb.velocity.y < 0)
+        {
+            //rb.AddRelativeForce(Vector3.down * extraGravityCloseToTheGround * Mathf.Abs(rb.velocity.y), ForceMode.VelocityChange);
+            //Debug.Log("GOING DOWN " + Time.time);
+            //Debug.Log(rb.velocity);
+        }
+    }
+
+    void CalculateGlobalSpeed()
+    {
+        globalSpeed = transform.position - lastPosition;
+        lastPosition = transform.position;
+        //Debug.Log("velocity: " + globalSpeed.ToString("f3"));
+
+        globalSpeedEvent?.Invoke(globalSpeed);
+    }
+
+
+    private void OnDrawGizmos()
+    {
+
+        /*// Ground check debug
+        Bounds _currentBounds = gameObject.GetComponent<Collider>().bounds;
+        float _currentHeight = _currentBounds.size.y;
+
+        float _sphereRadius = 0.25f;
+        Vector3 _spherePosition = transform.position;
+        _spherePosition.y = transform.position.y - _currentHeight * 0.5f + _sphereRadius * 0.95f;
+
+        Gizmos.color = Color.blue;
+        Gizmos.DrawSphere(_spherePosition, _sphereRadius);*/
+
+        /*// ceiling check debug
+        Vector3 _rayOrigin = new Vector3(transform.position.x, transform.position.y - _currentHeight * 0.5f, transform.position.z);
+        float _rayLengh = standingHeight;
+        RaycastHit _hit;
+
+        float _sphereRadius2 = 0.25f;
+        Vector3 _spherePosition2 = transform.position;
+        _spherePosition2.y = transform.position.y + _currentHeight * 0.5f;
+
+        Gizmos.color = Color.red;
+        //Gizmos.DrawLine(_rayOrigin, _rayOrigin + Vector3.up *_rayLengh);
+        Gizmos.DrawLine(_rayOrigin, _rayOrigin + Vector3.up * _rayLengh);*/
+
+        Bounds _currentBounds = gameObject.GetComponent<Collider>().bounds;
+        float _currentHeight = _currentBounds.size.y / 2;
+
+        Vector3 _rayOrigin = transform.position;
+        float _rayLengh = _currentHeight * 1.1f;
+        RaycastHit _hit;
+
+        Gizmos.color = Color.red;
+        Gizmos.DrawLine(_rayOrigin, _rayOrigin + Vector3.down * _rayLengh);
+    }
+
 
 }
