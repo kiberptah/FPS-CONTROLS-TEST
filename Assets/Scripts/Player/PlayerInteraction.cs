@@ -60,12 +60,12 @@ public class PlayerInteraction : MonoBehaviour
                 }
                 else // if not in range
                 {
-                    if (currentTarget != null)
+                    /*if (currentTarget != null)
                     {
                         currentTarget.OnHoverEnd(transform);
                         currentTarget = null;
                         return;
-                    }
+                    }*/
                 }
             }
             else // if doesn't hit interactable

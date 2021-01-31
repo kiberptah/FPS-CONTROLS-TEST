@@ -34,7 +34,7 @@ public class StickToTheSurface : MonoBehaviour
         Stick();
 
         //Debug.Log("player velocity: " + rb.velocity.ToString("f3"));
-        //Stick2();
+        //Stick2();//   
     }
 
     private void Update()
@@ -81,7 +81,7 @@ public class StickToTheSurface : MonoBehaviour
             if (transform.parent != null)
             {
                 /// IMITATE INERTIA
-                Debug.Log("rb.velocity: " + rb.velocity + "| surfaceGlobalSpeed: " + surfaceGlobalSpeed.ToString("f3") + "| Time.fixedDeltaTime: " + Time.fixedDeltaTime);
+                //Debug.Log("rb.velocity: " + rb.velocity + "| surfaceGlobalSpeed: " + surfaceGlobalSpeed.ToString("f3") + "| Time.fixedDeltaTime: " + Time.fixedDeltaTime);
                 rb.velocity += surfaceGlobalSpeed / Time.fixedDeltaTime;
                 
                 //
@@ -133,7 +133,7 @@ public class StickToTheSurface : MonoBehaviour
             surfaceGlobalSpeed = surface.transform.position - lastSurfacePosition;
             surfaceGlobalSpeed = surface.transform.TransformDirection(surfaceGlobalSpeed);
             lastSurfacePosition = surface.transform.position;
-            Debug.Log("| surfaceGlobalSpeed: " + surfaceGlobalSpeed.ToString("f3"));
+            //Debug.Log("| surfaceGlobalSpeed: " + surfaceGlobalSpeed.ToString("f3"));
         }
 
     }

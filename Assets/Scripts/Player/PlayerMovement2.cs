@@ -371,7 +371,6 @@ public class PlayerMovement2 : MonoBehaviour
 
         Vector3 _rayOrigin = transform.position;
         float _rayLengh = _currentHeight * 1.1f;
-        RaycastHit _hit;
 
         Gizmos.color = Color.red;
         Gizmos.DrawLine(_rayOrigin, _rayOrigin + Vector3.down * _rayLengh);
