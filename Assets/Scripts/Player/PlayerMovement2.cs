@@ -10,17 +10,19 @@ public class PlayerMovement2 : MonoBehaviour
     public static event Action<Vector3> globalSpeedEvent;
 
     [Header("Features")]
-    public bool slowWalkingEnabled = true;
+    public bool sprintEnabled = true;
     public bool jumpingEnabled = true;
     public bool crouchingEnabled = true;
     [Header("Tweaking")]
-    public float speed = 1f;
+    //public float speed = 1f;
+    public float acceleration = 1f;
+    public float speedLimit = 10;
 
-    public float slowWalkMultiplier = 0.5f;
-    public float crouchWalkMultiplier = 0.3f;
+    public float sprintSpeedMultiplier = 0.5f;
+    public float crouchSpeedMultiplier = 0.25f;
+    public float inAirSpeedMultiplier = 0.25f;
 
     public float jumpStrengh = 10f;
-    private Vector3 horizontalJumpStrengh = Vector3.zero;
 
     [SerializeField]
     private float heightScaleCrouching = 0.5f;
@@ -41,13 +43,12 @@ public class PlayerMovement2 : MonoBehaviour
     [SerializeField]
     private bool isCrouching = false;
 
-    private bool isSlowWalking = false;
+    private bool isSprinting = false;
     private bool isMoving = false;
 
     Rigidbody rb;
     float rb_defaultDrag;
     Bounds myBounds;
-    [SerializeField]
 
     private float standingHeight;
 
@@ -58,6 +59,11 @@ public class PlayerMovement2 : MonoBehaviour
     // Calculate global velocity
     Vector3 lastPosition;
     public Vector3 globalSpeed = Vector3.zero;
+
+
+    // RB.MOVEPOSITION has no inertia so there's need to imitate it when jumping and falling
+    Vector3 fakeInertia = Vector3.zero;
+    bool wasFakeInertiaPerformed = false;
 
     void Awake()
     {
@@ -77,11 +83,13 @@ public class PlayerMovement2 : MonoBehaviour
     // Update is called once per frame
     void FixedUpdate()
     {
+        //FakeInertia();
         Movement();
-        DragWhenStopped();
+
+        //DragWhenStopped();
         CheckHeadCollisions();
         CheckGroundBelow();
-        JumpPhysicsAdjust();
+        //JumpPhysicsAdjust();
         //MoreGravityCloserToTheGround();
         CalculateGlobalSpeed();
     }
@@ -99,45 +107,75 @@ public class PlayerMovement2 : MonoBehaviour
     {
         float _xVel = Input.GetAxis("Horizontal");
         float _zVel = Input.GetAxis("Vertical");
-        Vector3 _positionOffset = transform.TransformDirection(new Vector3(_xVel, 0, _zVel));
-        float _slowWalkMultiplier = 1f;
-        float _crouchWalkMultiplier = 1f;
+        Vector3 positionOffset = transform.TransformDirection(new Vector3(_xVel, 0, _zVel));
+
+        float sprintSpeedMultiplier = 1f;
+        float crouchWalkMultiplier = 1f;
+        float inAirSpeedMultiplier = 1f;
+        float speedLimit = this.speedLimit;
 
         //Slow Walking Speed
-        if (isSlowWalking)
+        if (isSprinting)
         {
-            _slowWalkMultiplier = slowWalkMultiplier;
+            sprintSpeedMultiplier = this.sprintSpeedMultiplier;
+            speedLimit = this.speedLimit * sprintSpeedMultiplier;
         }
         // Crouching Speed
         if (isCrouching)
         {
-            _crouchWalkMultiplier = crouchWalkMultiplier;
+            crouchWalkMultiplier = this.crouchSpeedMultiplier;
+            speedLimit = this.speedLimit * crouchSpeedMultiplier;
+        }
+        // In-Air Speed
+        if (isGrounded == false)
+        {
+            inAirSpeedMultiplier = this.inAirSpeedMultiplier;
+
+            crouchWalkMultiplier = 1f;
+            speedLimit = this.speedLimit * inAirSpeedMultiplier;
         }
 
         //Moving
-        _positionOffset = _positionOffset.normalized * speed * _crouchWalkMultiplier * _slowWalkMultiplier;
-        horizontalJumpStrengh = _positionOffset * rb.mass;
-        if ((Input.GetAxis("Horizontal") != 0 || Input.GetAxis("Vertical") != 0) && isGrounded)
+        positionOffset = positionOffset.normalized * acceleration * crouchWalkMultiplier;
+        if (_xVel != 0 || _zVel != 0)
         {
+            Debug.Log("move offset :" + positionOffset);
             isMoving = true;
-            //rb.MovePosition(transform.position + _positionOffset  * Time.fixedDeltaTime); // no inertia
-            rb.velocity = new Vector3(_positionOffset.x, rb.velocity.y, _positionOffset.z);
+
+            float accelerationModifier = 1 - Mathf.Clamp(rb.velocity.magnitude / speedLimit, 0, 1);
+
+            //rb.MovePosition(transform.position + _positionOffset  * Time.fixedDeltaTime); // NO INERTIA! also doesnt work with moving platfroms but doesnt glitch between colliders
+            //rb.velocity = new Vector3(_positionOffset.x, rb.velocity.y, _positionOffset.z);
+            rb.AddForce(positionOffset * accelerationModifier, ForceMode.Acceleration);
+
             eventPlayerMoving?.Invoke(true, new Vector3(_xVel, 0, _zVel));
         }
         else
         {
             eventPlayerMoving?.Invoke(false, Vector3.zero);
-            if (isMoving)
-            {
-                isMoving = false;
-                if (isGrounded)
-                {
-                    //rb.velocity = new Vector3(0, rb.velocity.y, 0);
-                }
-            }
+            isMoving = false;
         }
 
         
+    }
+
+    void FakeInertia()
+    {
+        if (isGrounded == false && wasFakeInertiaPerformed == false)
+        {
+            fakeInertia = globalSpeed;
+            fakeInertia.y = 0;
+
+            rb.AddForce(fakeInertia, ForceMode.VelocityChange);
+
+            wasFakeInertiaPerformed = true;
+
+            Debug.Log(Time.time + " Faking inertia: " + fakeInertia.ToString("f3"));
+        }
+        if (isGrounded)
+        {
+            wasFakeInertiaPerformed = false;
+        }
     }
 
     void DragWhenStopped()
@@ -158,23 +196,10 @@ public class PlayerMovement2 : MonoBehaviour
         float _zVel = Input.GetAxis("Vertical");
 
         if (jumpingEnabled)
-        {                 
+        {
             if (Input.GetButtonDown("Jump") && isGrounded && !isCrouching)
             {
-                /*if (rb.velocity.y > 0)
-                {
-                    
-
-                    rb.AddForce(Vector3.up * jumpStrengh + new Vector3(0, rb.velocity.y, 0), ForceMode.VelocityChange);
-                    Debug.Log("jump adjust");
-                }
-                else
-                {
-                    rb.AddForce(Vector3.up * jumpStrengh, ForceMode.VelocityChange);
-                }*/
-
                 rb.AddForce(Vector3.up * jumpStrengh, ForceMode.VelocityChange);
-
             }
         }
     }
@@ -304,11 +329,11 @@ public class PlayerMovement2 : MonoBehaviour
     {
         if (Input.GetButton("SlowWalk"))
         {
-            isSlowWalking = true;
+            isSprinting = true;
         }
         else
         {
-            isSlowWalking = false;
+            isSprinting = false;
         }
     }
 
@@ -331,7 +356,7 @@ public class PlayerMovement2 : MonoBehaviour
 
     void CalculateGlobalSpeed()
     {
-        globalSpeed = transform.position - lastPosition;
+        globalSpeed = (transform.position - lastPosition) / Time.fixedDeltaTime;
         lastPosition = transform.position;
         //Debug.Log("velocity: " + globalSpeed.ToString("f3"));
 

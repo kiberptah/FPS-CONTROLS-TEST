@@ -14,7 +14,7 @@ public class PlayerPushbackFromWalls : MonoBehaviour
     void Awake()
     {
         //TryGetComponent<Rigidbody>(out rb);
-        rb = GetComponent<Rigidbody>();
+        //rb = GetComponent<Rigidbody>();
     }
 
     // Update is called once per frame
