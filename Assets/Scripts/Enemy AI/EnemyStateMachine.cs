@@ -6,21 +6,18 @@ public class EnemyStateMachine : MonoBehaviour
 {
     // Attack
     [Header("Attack")]
-    public Transform attackTarget;
-    [SerializeField]
     public float attackDamage;
-
-    public float attackCooldown;
-    public float attackCurrentCooldown;
-
-    public float attackCharge;
-    public float attackChargeNeed = 2f;
-
-    public bool attackisReady = false;
-
     public float attackDistance = 20f;
 
-    public GameObject attackVisualizer;
+    public float attackCooldown;
+    [HideInInspector] public float attackCurrentCooldown;
+
+    [HideInInspector] public float attackCharge;
+    public float attackChargeRequired = 2f;
+
+    [HideInInspector] public Transform attackTarget;
+    [HideInInspector] public bool isAttackReady = false;
+
     // Movement
     [Header("Movement")]
     [SerializeField]
@@ -34,15 +31,13 @@ public class EnemyStateMachine : MonoBehaviour
     private float sightFOV;
     [SerializeField]
     private float sightDistance;
-    private float spherecastThickness = 1f;
 
-    public bool canSeePlayer = false;
-    public Vector3 lastKnownPlayerPosition;
-    public Vector3 lastCombatPosition;
+    [HideInInspector] public bool doesSeePlayer = false;
+    [HideInInspector] public Vector3 lastKnownPlayerPosition;
+    [HideInInspector] public Vector3 lastCombatPosition;
 
     [Header("Other")]
-    [SerializeField]
-    public string currentStateName;
+    [HideInInspector] public string currentStateName;
     public INPCState currentState;
 
 
@@ -50,7 +45,8 @@ public class EnemyStateMachine : MonoBehaviour
     public AttackState attackState = new AttackState();
     public ChaseState chaseState = new ChaseState();
 
-    public Rigidbody rb;
+
+    [HideInInspector] public Rigidbody rb;
 
     private void Awake()
     {
@@ -59,8 +55,7 @@ public class EnemyStateMachine : MonoBehaviour
     }
     private void Start()
     {
-        attackTarget = Player.singleton?.transform;
-
+        attackTarget = Player.singleton?.transform; // fine since player is the only possible target... overwise the whole thing has to be reworked anyway
     }
 
     void OnEnable()
@@ -90,23 +85,24 @@ public class EnemyStateMachine : MonoBehaviour
         {
             if (_hit.transform.tag == "Player" && Vector3.Angle(_direction, transform.forward) <= sightFOV)
             {
-                canSeePlayer = true;
+                doesSeePlayer = true;
                 lastKnownPlayerPosition = _hit.transform.position;
                 lastCombatPosition = transform.position;
             }
             else
             {
-                canSeePlayer = false;
+                doesSeePlayer = false;
             }
         }
         else
         {
-            canSeePlayer = false;
+            doesSeePlayer = false;
         }
     }
 
     void HoverAboveGround()
     {
+
         RaycastHit _hit;
 
         // Going up

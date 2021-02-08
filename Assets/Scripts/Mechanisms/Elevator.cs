@@ -5,11 +5,17 @@ using UnityEngine;
 using UnityEngine.Events;
 
 
+[RequireComponent(typeof(Rigidbody))]
+
 public class Elevator : MonoBehaviour
 {
+
+
     [SerializeField] List<float> floorsHeight = new List<float>();
     List<Vector3> floorsCoord = new List<Vector3>();
     [SerializeField] Transform elevatorCabin;
+
+    [Range(0, 10)]
     [SerializeField] float elevatorSpeed = 10f;
 
     IEnumerator elevator;
@@ -18,40 +24,89 @@ public class Elevator : MonoBehaviour
     [SerializeField] UnityEvent elevatorStop;
 
 
+    bool isElevatorMoving = false;
+    int destinationFloor;
+
+    Rigidbody rb;
+
+    Vector3 destination;
+    Vector3 offset;
+
     //Vector3 destination;
 
     private void Awake()
     {
+        rb = GetComponent<Rigidbody>();
+        rb.isKinematic = true;
+
+        elevatorSpeed = Mathf.Clamp(elevatorSpeed * 0.1f, 0, 10);
+
         for (int i = 0; i < floorsHeight.Count; ++i)
         {
-            floorsCoord.Add(new Vector3(0, floorsHeight[i], 0));
+            floorsCoord.Add(new Vector3(transform.localPosition.x, floorsHeight[i], transform.localPosition.z));
         }
         //destination = elevatorCabin.transform.localPosition;
         
     }
     public void ChangeFloor(int _floor)
     {
-        //destination = floorsCoord[_floor];
-        if (elevator != null)
+
+        /*if (elevator != null)
         {
             StopCoroutine(elevator);
         }
         
         elevator = MoveElevator(_floor);
-        StartCoroutine(elevator);
+        StartCoroutine(elevator);*/
+
+
+        destinationFloor = _floor;
+        destination = transform.parent.TransformPoint(floorsCoord[destinationFloor]);
+        offset = (destination - elevatorCabin.transform.position).normalized * elevatorSpeed;
+
+
+        isElevatorMoving = true;
+        elevatorStart?.Invoke();
+
+
+    }
+    public void StopElevator()
+    {
+        isElevatorMoving = false;
     }
 
     private void FixedUpdate()
     {
+        ElevatorMovement();
+    }
 
-        /*if (Vector3.Distance(elevatorCabin.transform.localPosition, destination) > 0.01f)
+    void ElevatorMovement()
+    {
+        if (isElevatorMoving == true)
         {
-            elevatorCabin.transform.Translate((destination - elevatorCabin.transform.localPosition).normalized * Time.deltaTime * elevatorSpeed);
+
+            if (Vector3.Distance(elevatorCabin.transform.localPosition, floorsCoord[destinationFloor]) > 0.1f)
+            {
+                if (Vector3.Distance(transform.position + offset, destination) > Vector3.Distance(transform.position, destination) 
+                    || transform.position == destination)
+                {
+                    //elevatorCabin.transform.localPosition = floorsCoord[destinationFloor];
+                    transform.position = destination;
+
+                    Debug.Log(Time.time + " elevator adjust position");
+                    //rb.MovePosition(destination);
+                    isElevatorMoving = false;
+                    elevatorStop?.Invoke();
+                }
+                else
+                {
+                    //rb.MovePosition(transform.position + offset);
+                    transform.Translate(offset);
+                    Debug.Log(Time.time + " elevator moving");
+
+                }
+            }
         }
-        if (Vector3.Distance(elevatorCabin.transform.localPosition, destination) < 0.01f && Vector3.Distance(elevatorCabin.transform.localPosition, destination) != 0)
-        {
-            elevatorCabin.transform.localPosition = destination;
-        }*/
     }
 
     IEnumerator MoveElevator(int _floor)

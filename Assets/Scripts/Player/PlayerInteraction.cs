@@ -30,7 +30,8 @@ public class PlayerInteraction : MonoBehaviour
 
         if (Physics.Raycast(ray, out hit, range))
         {
-            IInteractable interactable = hit.transform.GetComponent<IInteractable>();
+            //Debug.Log(Time.time + " interact: " + hit.transform);
+            IInteractable interactable = hit.collider.transform.GetComponent<IInteractable>();
 
             if (interactable != null) // if hit interactable
             {

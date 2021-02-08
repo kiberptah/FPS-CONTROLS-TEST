@@ -9,7 +9,7 @@ public class FirstPersonCamera : MonoBehaviour
 
     private float xRotation = 0f;
 
-    void Start()
+    void Awake()
     {
         Cursor.lockState = CursorLockMode.Locked;
     }

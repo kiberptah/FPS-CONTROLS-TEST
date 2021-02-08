@@ -11,7 +11,7 @@ public class PatrolState : INPCState
 
         JustRotate(npc);
 
-        if (npc.canSeePlayer)
+        if (npc.doesSeePlayer)
         {
             isStateEntered = false;
             return npc.attackState;

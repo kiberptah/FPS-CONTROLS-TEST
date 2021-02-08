@@ -11,11 +11,22 @@ public class EventDirector : MonoBehaviour
     public static Action<Transform, Transform, Vector3, float> someAttack;
     public static Action<Transform, Transform, Vector3, float> somePrepAttack;
 
-    public static Action<Transform, float> updateHealth;
+    public static Action<float> player_updateHealth;
+    public static Action test;
+
+
+    public static Action player_Death;
+
 
     public static Action<string> showInteractUI;
     public static Action hideInteractUI;
 
+
+
+
+
+
+    public static EventDirector instance;
     void Awake()
     {
         if (EventDirector.instance != null)
@@ -27,8 +38,4 @@ public class EventDirector : MonoBehaviour
             instance = this;
         }
     }
-
-    public static EventDirector instance;
-    /*public delegate void myDelegate(float amount);
-    public static event myDelegate playerHeal;*/
 }

@@ -9,36 +9,31 @@ public class GameDirector : MonoBehaviour
     public static GameDirector instance;
     void Awake()
     {
-        if (Player.singleton != null)
+        if (GameDirector.instance != null)
         {
             Destroy(gameObject);
         }
         else
         {
             instance = this;
-        }
-
-
-        
+        }  
     }
+
+
+
 
     private void OnEnable()
     {
-        EventDirector.someDeath += CheckDeath;
+        EventDirector.player_Death += PlayerDeath;
     }
 
-    void Update()
+    private void OnDisable()
     {
-        
+        EventDirector.player_Death -= PlayerDeath;
     }
 
-    void CheckDeath(Transform ddd)
-    {
-        if (ddd == Player.singleton.transform)
-        {
-            PlayerDeath();
-        }
-    }
+
+
 
     void PlayerDeath()
     {
@@ -46,8 +41,4 @@ public class GameDirector : MonoBehaviour
         SceneDirector.instance.ChangeScene("RestartScreen");
     }
 
-    private void OnDisable()
-    {
-        EventDirector.someDeath -= CheckDeath;
-    }
 }

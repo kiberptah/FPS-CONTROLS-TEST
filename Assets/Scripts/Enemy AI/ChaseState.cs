@@ -11,7 +11,7 @@ public class ChaseState : INPCState
     {
 
 
-        if (npc.canSeePlayer)
+        if (npc.doesSeePlayer)
         {
             isStateEntered = false;
             return npc.attackState;

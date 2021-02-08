@@ -26,39 +26,43 @@ public class PlayerMovement2 : MonoBehaviour
     private float heightScaleCrouching = 0.5f;
     [SerializeField]
     private float heightScaleStanding;
-
-    [SerializeField] private float extraGravityCloseToTheGround = 100f;
-
     //
     //
     [Header("Debug")]
     [SerializeField]
     public bool isGrounded = true;
     [SerializeField] CheckFeetGround feetGroundCheck;
-    private bool hasLanded = true;
+
     [SerializeField]
     private bool isObstacleAbove = false;
     [SerializeField]
     private bool isCrouching = false;
 
+<<<<<<< Updated upstream
     private bool isSlowWalking = false;
     private bool isMoving = false;
+=======
+    private bool isSprinting = false;
+>>>>>>> Stashed changes
 
     Rigidbody rb;
     float rb_defaultDrag;
     Bounds myBounds;
+<<<<<<< Updated upstream
     [SerializeField]
 
+=======
+>>>>>>> Stashed changes
     private float standingHeight;
-
-    IEnumerator Crch;
-
-    private bool wasUnderObstacleWhileCrouching = false; // для автовставания когда вылезаешь из под откуда-то
 
     // Calculate global velocity
     Vector3 lastPosition;
     public Vector3 globalSpeed = Vector3.zero;
 
+<<<<<<< Updated upstream
+=======
+
+>>>>>>> Stashed changes
     void Awake()
     {
         rb = GetComponent<Rigidbody>();
@@ -119,14 +123,26 @@ public class PlayerMovement2 : MonoBehaviour
         horizontalJumpStrengh = _positionOffset * rb.mass;
         if ((Input.GetAxis("Horizontal") != 0 || Input.GetAxis("Vertical") != 0) && isGrounded)
         {
+<<<<<<< Updated upstream
             isMoving = true;
             //rb.MovePosition(transform.position + _positionOffset  * Time.fixedDeltaTime); // no inertia
             rb.velocity = new Vector3(_positionOffset.x, rb.velocity.y, _positionOffset.z);
+=======
+            //Debug.Log("move offset :" + positionOffset);
+
+            float accelerationModifier = 1 - Mathf.Clamp(rb.velocity.magnitude / speedLimit, 0, 1);
+
+            //rb.MovePosition(transform.position + _positionOffset  * Time.fixedDeltaTime); // NO INERTIA! also doesnt work with moving platfroms but doesnt glitch between colliders
+            //rb.velocity = new Vector3(_positionOffset.x, rb.velocity.y, _positionOffset.z);
+            rb.AddForce(positionOffset * accelerationModifier, ForceMode.Acceleration);
+
+>>>>>>> Stashed changes
             eventPlayerMoving?.Invoke(true, new Vector3(_xVel, 0, _zVel));
         }
         else
         {
             eventPlayerMoving?.Invoke(false, Vector3.zero);
+<<<<<<< Updated upstream
             if (isMoving)
             {
                 isMoving = false;
@@ -135,11 +151,14 @@ public class PlayerMovement2 : MonoBehaviour
                     //rb.velocity = new Vector3(0, rb.velocity.y, 0);
                 }
             }
+=======
+>>>>>>> Stashed changes
         }
 
         
     }
 
+<<<<<<< Updated upstream
     void DragWhenStopped()
     {
         if (isMoving)
@@ -152,6 +171,8 @@ public class PlayerMovement2 : MonoBehaviour
         }
     }
 
+=======
+>>>>>>> Stashed changes
     void Jumping()
     {
         float _xVel = Input.GetAxis("Horizontal");
@@ -176,22 +197,6 @@ public class PlayerMovement2 : MonoBehaviour
                 rb.AddForce(Vector3.up * jumpStrengh, ForceMode.VelocityChange);
 
             }
-        }
-    }
-    void JumpPhysicsAdjust()
-    {
-        if (isGrounded == false)
-        {
-            rb.drag = rb_defaultDrag * 0.1f;
-            hasLanded = false;
-        }
-
-        if (hasLanded == false && isGrounded == true)
-        {
-            //Debug.Log("EAGLE HAS LANDED " + Time.time);
-            //rb.velocity = new Vector3(0, rb.velocity.y, 0);
-            rb.drag = rb_defaultDrag;
-            hasLanded = true;
         }
     }
 
@@ -312,22 +317,6 @@ public class PlayerMovement2 : MonoBehaviour
         }
     }
 
-    void MoreGravityCloserToTheGround()
-    {
-        Bounds _currentBounds = gameObject.GetComponent<Collider>().bounds;
-        float _currentHeight = _currentBounds.size.y / 2;
-
-        Vector3 _rayOrigin = transform.position;
-        float _rayLengh = _currentHeight * 1.1f;
-        RaycastHit _hit;
-
-        if (Physics.Raycast(_rayOrigin, Vector3.down, out _hit, _rayLengh, ~LayerMask.GetMask("Player")) && isGrounded == false && rb.velocity.y < 0)
-        {
-            //rb.AddRelativeForce(Vector3.down * extraGravityCloseToTheGround * Mathf.Abs(rb.velocity.y), ForceMode.VelocityChange);
-            //Debug.Log("GOING DOWN " + Time.time);
-            //Debug.Log(rb.velocity);
-        }
-    }
 
     void CalculateGlobalSpeed()
     {

@@ -20,6 +20,7 @@ public class UI_ShowHideInteract : MonoBehaviour
         EventDirector.hideInteractUI -= HideUI;
     }
 
+
     private void Awake()
     {
         defaultInteractText = text.text;

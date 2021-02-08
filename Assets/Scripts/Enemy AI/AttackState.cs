@@ -20,7 +20,7 @@ public class AttackState : INPCState
     {
         OnStateEnter(npc);
 
-        if (npc.canSeePlayer == false)
+        if (npc.doesSeePlayer == false)
         {
             isStateEntered = false;
             return npc.chaseState;
@@ -41,7 +41,7 @@ public class AttackState : INPCState
         if (isStateEntered == false)
         {
             npc.attackCharge = 0;
-            npc.attackisReady = false;
+            npc.isAttackReady = false;
 
             dodging = WeirdDodging(npc);
             CoRunner.instance.StartCoroutine(dodging);
@@ -55,7 +55,7 @@ public class AttackState : INPCState
     {
         npc.transform.LookAt(npc.attackTarget);
 
-        if (npc.attackisReady == false)
+        if (npc.isAttackReady == false)
         {
             if (npc.attackCurrentCooldown >= npc.attackCooldown)
             {
@@ -66,10 +66,10 @@ public class AttackState : INPCState
                 attackLine.GetComponent<DrawLineToTarget>().target = npc.attackTarget;
                 Object.Destroy(attackLine, 0.2f);*/
 
-                //enemyPrepAttack?.Invoke(npc.transform, npc.attackTarget, npc.attackChargeNeed);
+                //enemyPrepAttack?.Invoke(npc.transform, npc.attackTarget, npc.attackChargeRequired);
                 EventDirector.somePrepAttack?.Invoke(npc.transform, npc.attackTarget, npc.attackTarget.position, npc.attackDamage);
 
-                npc.attackisReady = true;
+                npc.isAttackReady = true;
             }
             else
             {
@@ -77,14 +77,14 @@ public class AttackState : INPCState
             }
         }
 
-        if (npc.attackisReady == true)
+        if (npc.isAttackReady == true)
         {
-            if (npc.attackCharge >= npc.attackChargeNeed)
+            if (npc.attackCharge >= npc.attackChargeRequired)
             {
                 //enemyAttack?.Invoke(npc.transform, npc.attackTarget, npc.attackDamage);
                 EventDirector.someAttack?.Invoke(npc.transform, npc.attackTarget, npc.attackTarget.position, npc.attackDamage);
 
-                npc.attackisReady = false;
+                npc.isAttackReady = false;
                 npc.attackCharge = 0;
                 npc.attackCurrentCooldown = 0;
             }

@@ -12,7 +12,7 @@ public class InteractiveSwitch : MonoBehaviour, IInteractable
     public void OnHoverStart(Transform interactor)
     {
         EventDirector.showInteractUI("Interact");
-
+        //EventDirector.test();
     }
     public void OnHoverEnd(Transform interactor)
     {
