@@ -30,7 +30,7 @@ public class Health : MonoBehaviour
     }
     private void Start()
     {
-        EventDirector.updateHealth(transform, health);
+        //EventDirector.updateHealth(transform, health);
     }
 
 
@@ -58,7 +58,7 @@ public class Health : MonoBehaviour
     void ChangeHealth(float _amount)
     {
         health = Mathf.Clamp(health + _amount, 0, maxHealth);
-        EventDirector.updateHealth(transform, health);
+        //EventDirector.updateHealth(transform, health);
     }
 
 }

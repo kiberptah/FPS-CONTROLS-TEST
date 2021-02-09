@@ -11,7 +11,8 @@ public class EventDirector : MonoBehaviour
     public static Action<Transform, Transform, Vector3, float> someAttack;
     public static Action<Transform, Transform, Vector3, float> somePrepAttack;
 
-    public static Action<Transform, float> updateHealth;
+    public static Action<float> player_updateHealth;
+    public static Action player_Death;
 
     public static Action<string> showInteractUI;
     public static Action hideInteractUI;

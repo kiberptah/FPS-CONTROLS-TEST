@@ -10,6 +10,9 @@ using UnityEngine.Animations;
 
 public class StickToTheSurface : MonoBehaviour
 {
+
+    public float downwardRaycastLengh = 1.5f; //consider altering it for different situations (platforms/elevators)
+
     [SerializeField] CheckFeetGround groundCheck;
 
     [SerializeField] GameObject playerHolder;
@@ -24,26 +27,27 @@ public class StickToTheSurface : MonoBehaviour
     private void Awake()
     {
         rb = GetComponent<Rigidbody>();
-
     }
     void FixedUpdate()
     {
         CalculateSurfaceSpeed();
 
         FindSurfaceBelow();
+
         Stick();
 
-        //Debug.Log("player velocity: " + rb.velocity.ToString("f3"));
-        //Stick2();//   
+
+        if (surface == null)
+        {
+            //Debug.Break();
+        }
     }
 
-    private void Update()
+    private void LateUpdate()
     {
-        
+        //transform.rotation = new Quaternion(0, transform.transform.rotation.y, 0, 0);
 
     }
-
-
 
     void Stick()
     {
@@ -73,6 +77,7 @@ public class StickToTheSurface : MonoBehaviour
 
             transform.SetParent(playerParent.transform, true);
             playerParent.transform.SetParent(surface, true);
+
         }
         /// LEFT FROM ANY SURFACE
         if (surface == null)
@@ -83,7 +88,7 @@ public class StickToTheSurface : MonoBehaviour
                 /// IMITATE INERTIA
                 //Debug.Log("rb.velocity: " + rb.velocity + "| surfaceGlobalSpeed: " + surfaceGlobalSpeed.ToString("f3") + "| Time.fixedDeltaTime: " + Time.fixedDeltaTime);
                 rb.velocity += surfaceGlobalSpeed / Time.fixedDeltaTime;
-                
+
                 //
                 //я хз как это сделать не через лист надо удалить старого родителя при этом сменив его на null
                 List<GameObject> del = new List<GameObject>();
@@ -107,12 +112,12 @@ public class StickToTheSurface : MonoBehaviour
         if (surface != null)
             lastSurfacePosition = surface.transform.position; // DONT FORGET TO RESET LAST POSITION OVERWISE IT WOULD BE FROM PREVIOUS SURFACE!!!
 
-        /// REASSURE SURFACE BY RAYCASTING DOWN also helps stick to platforms better cause ray is long and there's extra gravity applied in other script
+        /// REASSURE SURFACE BY RAYCASTING DOWN also helps stick to platforms better cause ray is long
         Bounds _currentBounds = gameObject.GetComponent<Collider>().bounds;
         float _currentHeight = _currentBounds.size.y / 2;
 
         Vector3 _rayOrigin = transform.position;
-        float _rayLengh = _currentHeight * 1.2f;
+        float _rayLengh = _currentHeight + downwardRaycastLengh; // if that's too long i suggest using separate checks for old and new surfaces
         RaycastHit _hit;
 
         if (Physics.Raycast(_rayOrigin, Vector3.down, out _hit, _rayLengh, ~LayerMask.GetMask("Player")))
@@ -122,7 +127,8 @@ public class StickToTheSurface : MonoBehaviour
                 lastSurfacePosition = surface.transform.position; // DONT FORGET TO RESET LAST POSITION OVERWISE IT WOULD BE FROM PREVIOUS SURFACE!!!
         }
 
-        //Debug.Log(surface);
+        //Debug.Log("hit: " + _hit.transform + " and surface " + surface);
+        //Debug.Log(_currentHeight);
     }
 
     /// CALCULATE GLOBAL VELOCITY OF THE SURFACE
@@ -136,5 +142,20 @@ public class StickToTheSurface : MonoBehaviour
             //Debug.Log("| surfaceGlobalSpeed: " + surfaceGlobalSpeed.ToString("f3"));
         }
 
+    }
+
+    private void OnDrawGizmos()
+    {
+        Bounds _currentBounds = gameObject.GetComponent<Collider>().bounds;
+        float _currentHeight = _currentBounds.size.y / 2;
+
+        Vector3 _rayOrigin = transform.position;
+        float _rayLengh = _currentHeight + downwardRaycastLengh;
+        RaycastHit _hit;
+
+
+
+        Gizmos.color = Color.green;
+        Gizmos.DrawLine(_rayOrigin, _rayOrigin + Vector3.down * _rayLengh);
     }
 }

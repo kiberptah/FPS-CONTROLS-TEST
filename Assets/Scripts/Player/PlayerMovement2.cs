@@ -139,7 +139,7 @@ public class PlayerMovement2 : MonoBehaviour
         positionOffset = positionOffset.normalized * acceleration * crouchWalkMultiplier;
         if (_xVel != 0 || _zVel != 0)
         {
-            Debug.Log("move offset :" + positionOffset);
+            //Debug.Log("move offset :" + positionOffset);
             isMoving = true;
 
             float accelerationModifier = 1 - Mathf.Clamp(rb.velocity.magnitude / speedLimit, 0, 1);
