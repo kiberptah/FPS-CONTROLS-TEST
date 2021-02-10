@@ -45,10 +45,12 @@ public class StickToTheSurface : MonoBehaviour
 
     private void LateUpdate()
     {
-        //transform.rotation = new Quaternion(0, transform.transform.rotation.y, 0, 0);
-
+        MaintainRotation();
     }
-
+    void MaintainRotation()
+    {
+        transform.eulerAngles = new Vector3(0, transform.eulerAngles.y, 0); // better do it smoothly via transform.rotate
+    }
     void Stick()
     {
         /// CHANGE TO ANOTHER SURFACE
@@ -143,7 +145,7 @@ public class StickToTheSurface : MonoBehaviour
         }
 
     }
-
+    
     private void OnDrawGizmos()
     {
         Bounds _currentBounds = gameObject.GetComponent<Collider>().bounds;

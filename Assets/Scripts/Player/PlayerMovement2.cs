@@ -6,8 +6,8 @@ using System;
 
 public class PlayerMovement2 : MonoBehaviour
 {
-    public static event Action<bool, Vector3> eventPlayerMoving;
-    public static event Action<Vector3> globalSpeedEvent;
+    /*public static event Action<bool, bool, Vector3> eventPlayerMoving;
+    public static event Action<Vector3> globalSpeedEvent;*/
 
     [Header("Features")]
     public bool sprintEnabled = true;
@@ -17,6 +17,9 @@ public class PlayerMovement2 : MonoBehaviour
     //public float speed = 1f;
     public float acceleration = 1f;
     public float speedLimit = 10;
+
+    [Range(0.1f, 0.9f)]
+    public float fakeInertiaModifier = 0.1f;
 
     public float sprintSpeedMultiplier = 0.5f;
     public float crouchSpeedMultiplier = 0.25f;
@@ -85,19 +88,21 @@ public class PlayerMovement2 : MonoBehaviour
     {
         //FakeInertia();
         Movement();
-
+        FakeFriction();
         //DragWhenStopped();
         CheckHeadCollisions();
         CheckGroundBelow();
         //JumpPhysicsAdjust();
         //MoreGravityCloserToTheGround();
         CalculateGlobalSpeed();
+
+        Debug.Log(new Vector3(rb.velocity.x, 0, rb.velocity.z).magnitude);
     }
     void Update()
     {
         Jumping();
         CrouchingReworked();
-        WalkingSlowly();
+        Sprinting();
 
     }
 
@@ -109,12 +114,14 @@ public class PlayerMovement2 : MonoBehaviour
         float _zVel = Input.GetAxis("Vertical");
         Vector3 positionOffset = transform.TransformDirection(new Vector3(_xVel, 0, _zVel));
 
+        float acceleration = this.acceleration;
+
         float sprintSpeedMultiplier = 1f;
         float crouchWalkMultiplier = 1f;
         float inAirSpeedMultiplier = 1f;
         float speedLimit = this.speedLimit;
 
-        //Slow Walking Speed
+        //sprint Walking Speed
         if (isSprinting)
         {
             sprintSpeedMultiplier = this.sprintSpeedMultiplier;
@@ -132,7 +139,10 @@ public class PlayerMovement2 : MonoBehaviour
             inAirSpeedMultiplier = this.inAirSpeedMultiplier;
 
             crouchWalkMultiplier = 1f;
-            speedLimit = this.speedLimit * inAirSpeedMultiplier;
+            //speedLimit = this.speedLimit * inAirSpeedMultiplier;
+            speedLimit = this.speedLimit * 0.5f; // magic constant for better feel!
+            acceleration = this.acceleration * inAirSpeedMultiplier * inAirSpeedMultiplier;
+
         }
 
         //Moving
@@ -142,21 +152,54 @@ public class PlayerMovement2 : MonoBehaviour
             //Debug.Log("move offset :" + positionOffset);
             isMoving = true;
 
-            float accelerationModifier = 1 - Mathf.Clamp(rb.velocity.magnitude / speedLimit, 0, 1);
+
+            float accelerationModifier = 1 - Mathf.Clamp(new Vector3(rb.velocity.x, 0, rb.velocity.z).magnitude / speedLimit, 0, 1);
 
             //rb.MovePosition(transform.position + _positionOffset  * Time.fixedDeltaTime); // NO INERTIA! also doesnt work with moving platfroms but doesnt glitch between colliders
             //rb.velocity = new Vector3(_positionOffset.x, rb.velocity.y, _positionOffset.z);
+
+
             rb.AddForce(positionOffset * accelerationModifier, ForceMode.Acceleration);
 
-            eventPlayerMoving?.Invoke(true, new Vector3(_xVel, 0, _zVel));
+            EventDirector.eventPlayerMoving?.Invoke(true, isGrounded, new Vector3(_xVel, 0, _zVel));
+
         }
         else
         {
-            eventPlayerMoving?.Invoke(false, Vector3.zero);
+            EventDirector.eventPlayerMoving?.Invoke(false, isGrounded, Vector3.zero);
             isMoving = false;
+
+
+
+            /*Vector3 slowdownForce = rb.velocity;
+            slowdownForce.y = 0;
+            float accelerationModifier = -Mathf.Clamp(rb.velocity.magnitude / speedLimit, 0, 1);
+
+            rb.AddForce(slowdownForce.normalized * acceleration * accelerationModifier, ForceMode.Acceleration);*/
         }
 
-        
+
+    }
+
+    void FakeFriction()
+    {
+        if (isGrounded)
+        {
+            float sprintSpeedMultiplier = 1f;
+
+            if (isSprinting)
+            {
+                sprintSpeedMultiplier = this.sprintSpeedMultiplier;
+            }
+
+
+
+            Vector3 slowdownForce = rb.velocity;
+            slowdownForce.y = 0;
+            float accelerationModifier = -Mathf.Clamp(new Vector3(rb.velocity.x, 0, rb.velocity.z).magnitude / speedLimit, 0, 1);
+
+            rb.AddForce(slowdownForce.normalized * acceleration / sprintSpeedMultiplier * fakeInertiaModifier * accelerationModifier, ForceMode.Acceleration);
+        }
     }
 
     void FakeInertia()
@@ -325,7 +368,7 @@ public class PlayerMovement2 : MonoBehaviour
         // Checking Ground via Feet
         isGrounded = feetGroundCheck.isColliding;
     }
-    void WalkingSlowly()
+    void Sprinting()
     {
         if (Input.GetButton("SlowWalk"))
         {
@@ -360,7 +403,7 @@ public class PlayerMovement2 : MonoBehaviour
         lastPosition = transform.position;
         //Debug.Log("velocity: " + globalSpeed.ToString("f3"));
 
-        globalSpeedEvent?.Invoke(globalSpeed);
+        EventDirector.globalSpeedEvent?.Invoke(globalSpeed);
     }
 
 

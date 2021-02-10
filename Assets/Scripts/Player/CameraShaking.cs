@@ -6,8 +6,10 @@ using System;
 
 public class CameraShaking : MonoBehaviour
 {
-    bool isPlayerMoving;
-    Vector3 directionection;
+    bool isPlayerWalking;
+    bool isGrounded;
+
+    Vector3 direction;
 
     Animator animator;
 
@@ -23,8 +25,12 @@ public class CameraShaking : MonoBehaviour
     }
     private void OnEnable()
     {
-        PlayerMovement2.eventPlayerMoving += MovementCheck;
+        EventDirector.eventPlayerMoving += MovementCheck;
         animator = transform.GetComponent<Animator>();
+    }
+    void OnDisable()
+    {
+        EventDirector.eventPlayerMoving -= MovementCheck;
     }
 
     private void Update()
@@ -34,17 +40,17 @@ public class CameraShaking : MonoBehaviour
 
     void Headbobbing()
     {
-        if (isPlayerMoving)
+        if (isPlayerWalking && isGrounded)
         {
             // Move straight
-            if (Mathf.Abs(directionection.z) >= Mathf.Abs(directionection.x))
+            if (Mathf.Abs(direction.z) >= Mathf.Abs(direction.x))
             {
                 ChangeAnimationState(CamShake.camera_headbobbing);
             }
             // Strafe
-            if (Mathf.Abs(directionection.z) < Mathf.Abs(directionection.x))
+            if (Mathf.Abs(direction.z) < Mathf.Abs(direction.x))
             {
-                if (directionection.x > 0)
+                if (direction.x > 0)
                 {
                     ChangeAnimationState(CamShake.camera_strafeRight);
                 }
@@ -62,10 +68,12 @@ public class CameraShaking : MonoBehaviour
     }
 
 
-    void MovementCheck(bool _isPlayerMoving, Vector3 _directionection)
+    void MovementCheck(bool _isPlayerWalking, bool _isGrounded, Vector3 _direction)
     {
-        isPlayerMoving = _isPlayerMoving;
-        directionection = _directionection;
+        isPlayerWalking = _isPlayerWalking;
+        isGrounded = _isGrounded;
+
+        direction = _direction;
     }
 
     void ChangeAnimationState(CamShake _newState)
@@ -78,9 +86,5 @@ public class CameraShaking : MonoBehaviour
         currentState = _newState;
     }
 
-    void OnDisable()
-    {
-        PlayerMovement2.eventPlayerMoving -= MovementCheck;
-    }
     
 }

@@ -29,13 +29,22 @@ public class PlayerShooting : MonoBehaviour
         if (Input.GetButtonDown("Fire1") && isReadyToFire)
         {
             RaycastHit hit;
-            if (Physics.Raycast(fpsCam.transform.position, fpsCam.transform.forward, out hit, range, ~LayerMask.GetMask("Player")))
+            if (Physics.Raycast(fpsCam.transform.position, fpsCam.transform.forward, out hit, range, ~LayerMask.GetMask("Player", "Trigger")))
             {
                 if (hit.transform.GetComponent<IHealth>() != null) //probably unnecessary since using events
                 {
-                    EventDirector.someAttack(transform, hit.transform, hit.point, damage);
+                    EventDirector.someAttack?.Invoke(transform, hit.transform, hit.point, damage);
+                    EventDirector.player_firing?.Invoke(hit.point);
                     StartCoroutine(Recharge());
                 }
+                else
+                {
+                    EventDirector.player_firing?.Invoke(hit.point);
+                }
+            }
+            else
+            {
+                EventDirector.player_firing?.Invoke(transform.position + fpsCam.transform.forward * 100f);
             }
         }
     }
