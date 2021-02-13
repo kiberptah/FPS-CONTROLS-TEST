@@ -46,23 +46,17 @@ public class Elevator : MonoBehaviour
     public void ChangeFloor(int _floor)
     {
 
-        /*if (elevator != null)
+        if (floorsHeight.Count > 1) // to prevent errors when there's no floors assigned
         {
-            StopCoroutine(elevator);
+
+            destinationFloor = _floor;
+            destination = transform.parent.TransformPoint(floorsCoord[destinationFloor]);
+            offset = (destination - elevatorCabin.transform.position).normalized * elevatorSpeed;
+
+
+            isElevatorMoving = true;
+            elevatorStart?.Invoke();
         }
-        
-        elevator = MoveElevator(_floor);
-        StartCoroutine(elevator);*/
-
-
-        destinationFloor = _floor;
-        destination = transform.parent.TransformPoint(floorsCoord[destinationFloor]);
-        offset = (destination - elevatorCabin.transform.position).normalized * elevatorSpeed;
-
-
-        isElevatorMoving = true;
-        elevatorStart?.Invoke();
-
 
     }
     public void StopElevator()

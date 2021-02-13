@@ -96,7 +96,7 @@ public class PlayerMovement2 : MonoBehaviour
         //MoreGravityCloserToTheGround();
         CalculateGlobalSpeed();
 
-        Debug.Log(new Vector3(rb.velocity.x, 0, rb.velocity.z).magnitude);
+        //Debug.Log(new Vector3(rb.velocity.x, 0, rb.velocity.z).magnitude);
     }
     void Update()
     {

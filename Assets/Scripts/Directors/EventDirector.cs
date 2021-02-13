@@ -16,10 +16,13 @@ public class EventDirector : MonoBehaviour
     public static Action<float> player_Heal;
     public static Action player_Death;
     public static Action<float> player_ChangeResistance;
-    public static Action<Vector3> player_firing;
+    public static Action player_firing;
     public static Action<bool, bool, Vector3> eventPlayerMoving;
     public static Action<Vector3> globalSpeedEvent;
 
+    public static Action<bool> player_isWeaponDrawn;
+    public static Action player_holsterWeapon;
+    public static Action player_drawWeapon;
 
     public static Action<string> showInteractUI;
     public static Action hideInteractUI;

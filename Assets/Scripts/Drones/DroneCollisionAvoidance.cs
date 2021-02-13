@@ -38,7 +38,7 @@ public class DroneCollisionAvoidance : MonoBehaviour
     // Collision prevention
     void CollisionPrevention()
     {
-        if (collisionPrevention.isColliding == true)
+        if (collisionPrevention.isColliding == true && collisionPrevention.collision == true)
         {
             //Debug.Log("collision prevention: " + collisionPrevention.collision.name);
 

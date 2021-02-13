@@ -16,6 +16,16 @@ public class PlayerShooting : MonoBehaviour
     private float rechargeTimer = 0;
     private bool isReadyToFire = true;
 
+    private bool isWeaponDrawn;
+    private void OnEnable()
+    {
+        EventDirector.player_isWeaponDrawn += isWeaponDrawnStatus;
+    }
+    private void OnDisable()
+    {
+        EventDirector.player_isWeaponDrawn -= isWeaponDrawnStatus;
+    }
+
     private void Awake()
     {
         fpsCam = Camera.main;
@@ -26,7 +36,7 @@ public class PlayerShooting : MonoBehaviour
     }
     void Shoot()
     {
-        if (Input.GetButtonDown("Fire1") && isReadyToFire)
+        if (Input.GetButtonDown("Fire1") && isReadyToFire && isWeaponDrawn)
         {
             RaycastHit hit;
             if (Physics.Raycast(fpsCam.transform.position, fpsCam.transform.forward, out hit, range, ~LayerMask.GetMask("Player", "Trigger")))
@@ -34,18 +44,17 @@ public class PlayerShooting : MonoBehaviour
                 if (hit.transform.GetComponent<IHealth>() != null) //probably unnecessary since using events
                 {
                     EventDirector.someAttack?.Invoke(transform, hit.transform, hit.point, damage);
-                    EventDirector.player_firing?.Invoke(hit.point);
-                    StartCoroutine(Recharge());
+                    //EventDirector.player_firing?.Invoke();
                 }
                 else
                 {
-                    EventDirector.player_firing?.Invoke(hit.point);
+                    //EventDirector.player_firing?.Invoke();
                 }
             }
-            else
-            {
-                EventDirector.player_firing?.Invoke(transform.position + fpsCam.transform.forward * 100f);
-            }
+
+
+            EventDirector.player_firing?.Invoke();
+            StartCoroutine(Recharge());
         }
     }
     IEnumerator Recharge()
@@ -62,6 +71,11 @@ public class PlayerShooting : MonoBehaviour
         isReadyToFire = true;
 
         yield return null;
+    }
+
+    void isWeaponDrawnStatus(bool _status)
+    {
+        isWeaponDrawn = _status;
     }
 
 }
